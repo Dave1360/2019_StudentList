@@ -7,63 +7,300 @@
     <link rel="stylesheet" href="studentlist.css" type="text/css">
     <title>student List 2</title>
 
+    <style>
+
+body {
+    background-color: aliceblue;
+}
+
+.gryffindor {
+    background-color: #ce3a0a;
+    color: #fdb02e
+}
+
+.hufflepuff {
+    background-color: #ffc02a;
+    color: #0b0000  
+}
+
+.ravenclaw {
+    background-color: #395f9d;
+    color: #e9ba36  
+}
+
+.slytherin {
+    background-color: #588c39;
+    color: #c0b1c6  
+}
+    
+        #modal{
+            width: 100vw;
+            height: 100vw;
+            position: fixed;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: 1s;
+        }
+
+        #modalContent {
+            margin: 0 auto;
+            width: 40vw;
+            height: 20vw;
+        }
+
+        #modal.vis {
+            opacity: 1;
+            pointer-events: all;
+            transition: 0.5s;
+            margin: auto;
+        }
+
+    </style>
+
 </head>
 <body>
 
         <h1>Students 1991</h1>
     
-        <button data-category="Houses" class="filter-house">All Houses</button>
-        <button data-category="Gryffindor" class="filter-house">Gryffindor</button>
-        <button data-category="Hufflepuff" class="filter-house">Hufflepuff</button>
-        <button data-category="Ravenclaw" class="filter-house">Ravenclaw</button>
-        <button data-category="Slytherin" class="filter-house">Slytherin</button>
+        <button id="Houses" data-category="Houses" class="filter-house">All Houses</button>
+        <button id="Gryffindor" data-category="Gryffindor" class="filter-house">Gryffindor</button>
+        <button id="Hufflepuff"data-category="Hufflepuff" class="filter-house">Hufflepuff</button>
+        <button id="Ravenclaw" data-category="Ravenclaw" class="filter-house">Ravenclaw</button>
+        <button id="Slytherin" data-category="Slytherin" class="filter-house">Slytherin</button>
+        <button id="SortByLastname">Sort By Lastname</button>
+        <button id="SortByFirstname">Sort By Firstname</button>
+        <button id="SortHouse">Sort By House</button>
+
+
+        <section id="modal">
+            <div id="modalContent">
+                <button id="close">Close
+            </button>
+              <h1 id="modalHeader">
+                <span data-firstname></span>
+                <span data-lastname></span>
+              </h1>
+              <h2 id="modalHouse"></h2>
+              <img src="" alt="" id="modalImg">
+            </div>
+        </section>
 
 <main>
     <section class="data-container"></section>
 </main>
 
 <template class="data-template">
-   <article class="student-names-container">
-    <p data-name></p>
-    <p data-house></p>
-   </article>
+  
+<p class="name">
+    <span data-firstname> XX </span>
+    <span data-lastname>ZZ</span> House of 
+    <span data-house> YY </span>
+    <button id="expel">Expel Student</button>
+</p>
+   
 </template>
 
 <script>
-let wpJson;
+let jsonData;
 let dest = document.querySelector(".data-container");
-let houseFilter = "Houses";
-
-document.addEventListener("DOMContentLoaded", hentJson);
-
-async function hentJson() {
+let modal = document.querySelector("#modal");
+let houseFilter;
+let sort;
+document.addEventListener("DOMContentLoaded", init);
+const Student = {
+            fullname: "-student fullname-",
+            firstname: "-student firstname-",
+            middlename: "-student middlename-",
+            lastname: "-student lastname-",
+            house: "-student house-",
+            setJSONData(jsonObject) {
+            const parts = jsonObject.fullname.split(" ");
+            this.fullname = jsonObject.fullname;
+            this.firstname = parts[0] + " ";
+            this.lastname = parts[1];
+            this.house = jsonObject.house;
+            }
+        }
+const arrayOfStudents = [];
+function init() {
+    document.querySelector("#Houses").addEventListener("click", allHouses);
+    document.querySelector("#Gryffindor").addEventListener("click", onlyGriffindor);
+    document.querySelector("#Hufflepuff").addEventListener("click", onlyHufflepuff);
+    document.querySelector("#Ravenclaw").addEventListener("click", onlyRavenclaw);
+    document.querySelector("#Slytherin").addEventListener("click", onlySlytherin);
+    document.querySelector("#SortByLastname").addEventListener("click", () => {
+        sortLastname();
+    });
+    document.querySelector("#SortByFirstname").addEventListener("click", () => {
+        sortFirstname();
+    });
+    document.querySelector("#SortHouse").addEventListener("click", () => {
+        sortHouse();
+    });
+    loadJSON();
+}
+async function loadJSON() {
     let myJson = await fetch("http://petlatkea.dk/2019/students1991.json");
-            wpJSON = await myJson.json();
-            visJson();
+        jsonData = await myJson.json();
+        prepareObjects(jsonData);
 } 
+function prepareObjects(jsonData) {
+    jsonData.forEach( jsonObject => {
+        const student = Object.create(Student);
+        student.setJSONData(jsonObject);
+        arrayOfStudents.push(student);
+    });
+    filterList();
+}
+function allHouses() {
+    houseFilter = arrayOfStudents;
+    filterList(houseFilter);
+}
+function onlyGriffindor() {
+    houseFilter = "Gryffindor";
+    filterList(houseFilter);
+}
+function onlyHufflepuff() {
+    houseFilter = "Hufflepuff";
+    filterList(houseFilter);
+}
+function onlyRavenclaw() {
+    houseFilter = "Ravenclaw";
+    filterList(houseFilter);
+}
+function onlySlytherin() {
+    houseFilter = "Slytherin";
+    filterList(houseFilter);
+}
+function filterList(houseFilter) {
+    let filtered = arrayOfStudents;
+    if (houseFilter === "Gryffindor") {
+        filtered = filterByHouse("Gryffindor");
+    } else if (houseFilter === "Hufflepuff") {
+        filtered = filterByHouse("Hufflepuff");
+    } else if (houseFilter === "Ravenclaw") {
+        filtered = filterByHouse("Ravenclaw");
+    } else if (houseFilter === "Slytherin") {
+        filtered = filterByHouse("Slytherin");
+    } else if (houseFilter === "") {
+    }
+    sortList(filtered);
+}
+function filterByHouse( house ) {
+            function onlyHouse(element) {
+            if ( element.house === house) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return arrayOfStudents.filter(onlyHouse);
+     }
 
-document.querySelectorAll(".filter-house").forEach(button => {
-    button.addEventListener("click", filtering);
-});
-
-function filtering() {
-    dest.textContent = "";
-    houseFilter = this.getAttribute("data-category");
-    visJson();
+function sortByLastName(a,b) {
+    if (a.lastname < b.lastname) {
+        return -1;
+    } else {
+        return 1;
+    }
 }
 
-function visJson() {
-    let myTemplate = document.querySelector(".data-template");
+function sortByFirstName(a,b) {
+    if (a.firstname < b.firstname) {
+        return -1;
+    } else {
+        return 1;
+    }
+}
 
-wpJSON.forEach(post => { 
-    let klon = myTemplate.cloneNode(true).content;
+function sortByHouse(a,b) {
+    if (a.house < b.house) {
+        return -1;
+    } else {
+        return 1;
+    }
+}
+  
+function sortLastname() {
+    arrayOfStudents.sort(sortByLastName);
+    filterList();
+}
 
-    if (post.house == houseFilter || houseFilter == "Houses") {
-        klon.querySelector("[data-name]").textContent = post.fullname;
-        klon.querySelector("[data-house]").textContent = post.house;
-        dest.appendChild(klon);
-    }  
-}); 
+function sortFirstname() {
+    arrayOfStudents.sort(sortByFirstName);
+    filterList();
+}
+
+function sortHouse() {
+    arrayOfStudents.sort(sortByHouse);
+    filterList();
+}
+
+function sortList(list) {
+    
+    displayList(list);
+}
+
+function displayList(students) {
+    document.querySelector(".data-container").innerHTML = "";
+
+    students.forEach( displayStudent );
+}
+function displayStudent( student ) {
+
+    const clone = document.querySelector("template.data-template").content.cloneNode(true);
+    clone.querySelector("[data-firstname]").textContent = student.firstname;
+    clone.querySelector("[data-lastname]").textContent = student.lastname;
+    clone.querySelector("[data-house]").textContent = student.house;
+    
+    clone.querySelector(".name").addEventListener("click", () => {
+        showModal(student);
+    });
+
+    document.querySelector(".data-container").appendChild(clone);
+}
+
+function showModal(student) {
+    console.log("showModal");
+
+    
+    let picture = student.lastname.toLowerCase() + "_" + student.firstname.substring(0,1).toLowerCase();
+   
+
+
+    modal.classList.add("vis");
+    modal.querySelector("[data-firstname]").textContent = student.firstname;
+    modal.querySelector("[data-lastname]").textContent = student.lastname;
+    modal.querySelector("#modalHouse").textContent = student.house;
+    modal.querySelector("#modalImg").src = "images/" + picture + ".png";
+
+
+    if (student.house === "Gryffindor") {
+        modal.querySelector("#modalContent").classList.add("gryffindor");
+    } 
+
+    if (student.house === "Hufflepuff") {
+        modal.querySelector("#modalContent").classList.add("hufflepuff");
+    } 
+
+    if (student.house === "Ravenclaw") {
+        modal.querySelector("#modalContent").classList.add("ravenclaw");
+    } 
+
+    if (student.house === "Slytherin") {
+        modal.querySelector("#modalContent").classList.add("slytherin");
+    } 
+
+    document.querySelector("#close").addEventListener("click", () => {
+        closeModal();
+    });
+}
+
+//git
+
+function closeModal() {
+    modal.classList.remove("vis");
 }
 </script>
 </body>
