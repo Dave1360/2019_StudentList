@@ -86,65 +86,67 @@ body {
             </div>
         </section>
 
+        <p id="expelledStudents">Number of expelled Students: <span class="StudentsExpelled"><b>0</b></span></p>
 <main>
     <section class="data-container"></section>
 </main>
 
+
+
 <template class="data-template">
   
 <p class="name">
+    <div id="studentInfo">
     <span data-firstname> XX </span>
     <span data-lastname>ZZ</span> House of 
     <span data-house> YY </span>
-    <button id="expel">Expel Student</button>
+    </div>
+    <button data-action="remove" class="expel">Expel Student</button>
 </p>
-   
+
 </template>
 
 <script>
 let jsonData;
+let filtered; 
 let dest = document.querySelector(".data-container");
 let modal = document.querySelector("#modal");
 let houseFilter;
 let sort;
 document.addEventListener("DOMContentLoaded", init);
 const Student = {
-            fullname: "-student fullname-",
             firstname: "-student firstname-",
             middlename: "-student middlename-",
             lastname: "-student lastname-",
             house: "-student house-",
             setJSONData(jsonObject) {
             const parts = jsonObject.fullname.split(" ");
-            this.fullname = jsonObject.fullname;
             this.firstname = parts[0] + " ";
             this.lastname = parts[1];
             this.house = jsonObject.house;
             }
         }
 const arrayOfStudents = [];
+const newArrayOfStudents = [];
+
 function init() {
     document.querySelector("#Houses").addEventListener("click", allHouses);
     document.querySelector("#Gryffindor").addEventListener("click", onlyGriffindor);
     document.querySelector("#Hufflepuff").addEventListener("click", onlyHufflepuff);
     document.querySelector("#Ravenclaw").addEventListener("click", onlyRavenclaw);
     document.querySelector("#Slytherin").addEventListener("click", onlySlytherin);
-    document.querySelector("#SortByLastname").addEventListener("click", () => {
-        sortLastname();
-    });
-    document.querySelector("#SortByFirstname").addEventListener("click", () => {
-        sortFirstname();
-    });
-    document.querySelector("#SortHouse").addEventListener("click", () => {
-        sortHouse();
-    });
+
+   document.querySelector('.data-container').addEventListener("click", clickExpelStudent);
+
     loadJSON();
 }
+
 async function loadJSON() {
     let myJson = await fetch("http://petlatkea.dk/2019/students1991.json");
         jsonData = await myJson.json();
         prepareObjects(jsonData);
 } 
+
 function prepareObjects(jsonData) {
     jsonData.forEach( jsonObject => {
         const student = Object.create(Student);
@@ -173,20 +175,8 @@ function onlySlytherin() {
     houseFilter = "Slytherin";
     filterList(houseFilter);
 }
-function filterList(houseFilter) {
-    let filtered = arrayOfStudents;
-    if (houseFilter === "Gryffindor") {
-        filtered = filterByHouse("Gryffindor");
-    } else if (houseFilter === "Hufflepuff") {
-        filtered = filterByHouse("Hufflepuff");
-    } else if (houseFilter === "Ravenclaw") {
-        filtered = filterByHouse("Ravenclaw");
-    } else if (houseFilter === "Slytherin") {
-        filtered = filterByHouse("Slytherin");
-    } else if (houseFilter === "") {
-    }
-    sortList(filtered);
-}
+
+
 function filterByHouse( house ) {
             function onlyHouse(element) {
             if ( element.house === house) {
@@ -198,54 +188,71 @@ function filterByHouse( house ) {
         return arrayOfStudents.filter(onlyHouse);
      }
 
-function sortByLastName(a,b) {
-    if (a.lastname < b.lastname) {
-        return -1;
-    } else {
-        return 1;
+
+function filterList(houseFilter) {
+    filtered = arrayOfStudents;
+    if (houseFilter === "Gryffindor") {
+        filtered = filterByHouse("Gryffindor");
+    } else if (houseFilter === "Hufflepuff") {
+        filtered = filterByHouse("Hufflepuff");
+    } else if (houseFilter === "Ravenclaw") {
+        filtered = filterByHouse("Ravenclaw");
+    } else if (houseFilter === "Slytherin") {
+        filtered = filterByHouse("Slytherin");
+    } else if (houseFilter === "") {
     }
+    displayList(filtered);
+    document.querySelector("#SortByLastname").addEventListener("click", () => {
+        sortLastname(filtered);
+    });
+    document.querySelector("#SortByFirstname").addEventListener("click", () => {
+        sortFirstname(filtered);
+    });
+    document.querySelector("#SortHouse").addEventListener("click", () => {
+        sortHouse(filtered);
+    });
+    return filtered;
 }
 
-function sortByFirstName(a,b) {
-    if (a.firstname < b.firstname) {
-        return -1;
-    } else {
-        return 1;
-    }
-}
+function sortFirstname(filtered) {
+          
+          filtered.sort(sortByFirstname);
+          displayList(filtered);
+          return filtered; 
+        }
 
-function sortByHouse(a,b) {
-    if (a.house < b.house) {
-        return -1;
-    } else {
-        return 1;
-    }
-}
-  
-function sortLastname() {
-    arrayOfStudents.sort(sortByLastName);
-    filterList();
-}
+        function sortLastname(filtered) {
+          filtered.sort(sortByLastname);
+          displayList(filtered);
+          return filtered; 
+        }
 
-function sortFirstname() {
-    arrayOfStudents.sort(sortByFirstName);
-    filterList();
-}
+        function sortHouse(filtered) {
+          filtered.sort(sortByHouse);
+          displayList(filtered);
+          return filtered;
+        }
 
-function sortHouse() {
-    arrayOfStudents.sort(sortByHouse);
-    filterList();
-}
+        function sortByFirstname(a, b) {
+          if( a.firstname < b.firstname) {return -1;}
+          else {return 1;}
+        }
 
-function sortList(list) {
-    
-    displayList(list);
-}
+        function sortByLastname(a, b) {
+          if( a.lastname < b.lastname) {return -1;}
+          else {return 1;}    
+        }
+        
+        function sortByHouse(a, b) {
+          if( a.house < b.house) { return -1; }
+          else {return 1;}   
+        }
+        
 
-function displayList(students) {
+function displayList(filtered) {
     document.querySelector(".data-container").innerHTML = "";
 
-    students.forEach( displayStudent );
+    filtered.forEach( displayStudent );
 }
 function displayStudent( student ) {
 
@@ -253,13 +260,58 @@ function displayStudent( student ) {
     clone.querySelector("[data-firstname]").textContent = student.firstname;
     clone.querySelector("[data-lastname]").textContent = student.lastname;
     clone.querySelector("[data-house]").textContent = student.house;
-    
-    clone.querySelector(".name").addEventListener("click", () => {
+    clone.querySelector('button').dataset.id = student.firstname;
+
+   /*  clone.querySelector("#studentInfo").addEventListener("click", () => {
         showModal(student);
     });
-
+ */
     document.querySelector(".data-container").appendChild(clone);
 }
+
+
+function clickExpelStudent(event) {
+  
+  console.log(event.target.innerHTML);
+  if(event.target.innerHTML === "Expel Student") {
+      clickRemoveStudent(event);
+      }
+}
+
+  function clickRemoveStudent(event) {
+
+  console.log(event.target.dataset.id);
+
+  let toBeRemoved = removeByName(event.target.dataset.id);
+
+  expelStudent(toBeRemoved);
+
+  function removeByName(firstname) {
+      function removeName(obj) {
+          if (obj.firstname === firstname) {
+              return true;
+          } else  {
+              return false;
+          }
+      }
+      let found = arrayOfStudents.find(removeName);
+      return found;
+  }
+
+  function expelStudent(obj) {
+      let pos = arrayOfStudents.indexOf(obj);
+      let deletedStudent = arrayOfStudents.splice(pos,1);
+      newArrayOfStudents.push(...deletedStudent);
+      console.log(newArrayOfStudents);
+
+      for (let x = 0; x < newArrayOfStudents.length; x++) {
+          document.querySelector(".StudentsExpelled").textContent = x + 1;
+          document.querySelector(".StudentsExpelled").style.fontWeight = "bold";
+      }
+  }
+  filterList(arrayOfStudents);
+}
+
 
 function showModal(student) {
     console.log("showModal");
