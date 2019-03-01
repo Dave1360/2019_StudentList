@@ -108,7 +108,7 @@ body {
 
 <script>
 let jsonData;
-let filtered; 
+let filtered;
 let dest = document.querySelector(".data-container");
 let modal = document.querySelector("#modal");
 let houseFilter;
@@ -136,7 +136,7 @@ function init() {
     document.querySelector("#Ravenclaw").addEventListener("click", onlyRavenclaw);
     document.querySelector("#Slytherin").addEventListener("click", onlySlytherin);
 
-   document.querySelector('.data-container').addEventListener("click", clickExpelStudent);
+    document.querySelector('.data-container').addEventListener("click", clickExpelStudent);
 
     loadJSON();
 }
@@ -177,6 +177,8 @@ function onlySlytherin() {
 }
 
 
+   
+
 function filterByHouse( house ) {
             function onlyHouse(element) {
             if ( element.house === house) {
@@ -190,6 +192,7 @@ function filterByHouse( house ) {
 
 
 function filterList(houseFilter) {
+
     filtered = arrayOfStudents;
     if (houseFilter === "Gryffindor") {
         filtered = filterByHouse("Gryffindor");
@@ -247,32 +250,28 @@ function sortFirstname(filtered) {
           if( a.house < b.house) { return -1; }
           else {return 1;}   
         }
-        
 
 function displayList(filtered) {
     document.querySelector(".data-container").innerHTML = "";
 
-    filtered.forEach( displayStudent );
-}
-function displayStudent( student ) {
-
+    filtered.forEach(student => {
     const clone = document.querySelector("template.data-template").content.cloneNode(true);
     clone.querySelector("[data-firstname]").textContent = student.firstname;
     clone.querySelector("[data-lastname]").textContent = student.lastname;
     clone.querySelector("[data-house]").textContent = student.house;
     clone.querySelector('button').dataset.id = student.firstname;
 
-   /*  clone.querySelector("#studentInfo").addEventListener("click", () => {
+    clone.querySelector("#studentInfo").addEventListener("click", () => {
         showModal(student);
     });
- */
-    document.querySelector(".data-container").appendChild(clone);
-}
 
+    document.querySelector(".data-container").appendChild(clone);
+
+    });
+}
 
 function clickExpelStudent(event) {
   
-  console.log(event.target.innerHTML);
   if(event.target.innerHTML === "Expel Student") {
       clickRemoveStudent(event);
       }
@@ -280,7 +279,6 @@ function clickExpelStudent(event) {
 
   function clickRemoveStudent(event) {
 
-  console.log(event.target.dataset.id);
 
   let toBeRemoved = removeByName(event.target.dataset.id);
 
@@ -302,25 +300,23 @@ function clickExpelStudent(event) {
       let pos = arrayOfStudents.indexOf(obj);
       let deletedStudent = arrayOfStudents.splice(pos,1);
       newArrayOfStudents.push(...deletedStudent);
-      console.log(newArrayOfStudents);
+ 
 
       for (let x = 0; x < newArrayOfStudents.length; x++) {
           document.querySelector(".StudentsExpelled").textContent = x + 1;
           document.querySelector(".StudentsExpelled").style.fontWeight = "bold";
       }
+      
   }
-  filterList(arrayOfStudents);
+  filterList(houseFilter);
 }
 
 
 function showModal(student) {
     console.log("showModal");
-
-    
+ 
     let picture = student.lastname.toLowerCase() + "_" + student.firstname.substring(0,1).toLowerCase();
    
-
-
     modal.classList.add("vis");
     modal.querySelector("[data-firstname]").textContent = student.firstname;
     modal.querySelector("[data-lastname]").textContent = student.lastname;
