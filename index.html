@@ -15,22 +15,34 @@ body {
 
 .gryffindor {
     background-color: #ce3a0a;
-    color: #fdb02e
+    color: #fdb02e;
+ 
 }
 
 .hufflepuff {
     background-color: #ffc02a;
-    color: #0b0000  
+    color: #0b0000;
+
 }
 
 .ravenclaw {
     background-color: #395f9d;
-    color: #e9ba36  
+    color: #e9ba36;
+  
 }
 
 .slytherin {
     background-color: #588c39;
-    color: #c0b1c6  
+    color: #c0b1c6; 
+   
+}
+
+    .data-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-gap: 20px;
+        max-width: 1000px;
+        margin: 30px auto;
 }
     
         #modal{
@@ -40,7 +52,7 @@ body {
             text-align: center;
             opacity: 0;
             pointer-events: none;
-            transition: 1s;
+
         }
 
         #modalContent {
@@ -56,13 +68,62 @@ body {
             margin: auto;
         }
 
+        #swampModal {
+        display: none;
+        position: fixed; 
+        z-index: 1; 
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+      }
+      .swampContent {
+        margin-top: 50px;
+        text-align: center;
+        font-size: 3em;
+        color: white;
+      }
+
+      #buttons {
+          text-align: center;
+      }
+
+      #expelledStudents {
+          text-align: center;
+          font-size: 20px;
+      }
+
+      button {
+          border-radius: 5px;
+      }
+
+      .name:hover {
+        cursor: pointer;
+      }
+
+      #studentInfo {
+          margin-left: 10px;
+      }
+
+      .expel {
+          margin-left: 10px;
+          margin-bottom: 5px;
+      }
+
+      #inquisitorialButton {
+        margin-left: 10px;
+          margin-bottom: 10px;
+      }
+
     </style>
 
 </head>
 <body>
 
-        <h1>Students 1991</h1>
-    
+        
+    <div id="buttons">
+            <h1>Students 1991</h1>
         <button id="Houses" data-category="Houses" class="filter-house">All Houses</button>
         <button id="Gryffindor" data-category="Gryffindor" class="filter-house">Gryffindor</button>
         <button id="Hufflepuff"data-category="Hufflepuff" class="filter-house">Hufflepuff</button>
@@ -71,7 +132,14 @@ body {
         <button id="SortByLastname">Sort By Lastname</button>
         <button id="SortByFirstname">Sort By Firstname</button>
         <button id="SortHouse">Sort By House</button>
+    </div>
 
+        <section id="swampModal">
+            <div class="swampContent">
+              <h1>WHAT ARE YOU DOING IN MY SWAMP!</h1>
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/VVggXZPCuYw" frameborder=0 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
+         </section>
 
         <section id="modal">
             <div id="modalContent">
@@ -82,28 +150,30 @@ body {
                 <span data-lastname></span>
               </h1>
               <h2 id="modalHouse"></h2>
-              <img src="" alt="" id="modalImg">
+              <p><b><span class="bloodStatus"></span></b></p>
+              <img src="" alt="" id="modalImg"><br>
             </div>
         </section>
 
         <p id="expelledStudents">Number of expelled Students: <span class="StudentsExpelled"><b>0</b></span></p>
-<main>
-    <section class="data-container"></section>
-</main>
 
+    <section class="data-container"></section>
 
 
 <template class="data-template">
   
-<p class="name">
+<div class="name">
     <div id="studentInfo">
+    <p>
     <span data-firstname> XX </span>
     <span data-lastname>ZZ</span> House of 
     <span data-house> YY </span>
+    </p>
+    <p><span data-squad></span></p>
     </div>
     <button data-action="remove" class="expel">Expel Student</button>
-</p>
-
+    <button id="inquisitorialButton">Add student to inquisitorial squad</button>
+</div>
 </template>
 
 <script>
@@ -111,23 +181,36 @@ let jsonData;
 let filtered;
 let dest = document.querySelector(".data-container");
 let modal = document.querySelector("#modal");
+let swampModal = document.querySelector("#swampModal");
 let houseFilter;
-let sort;
+let bloodlist;
+
+
+let david = {
+    fullname: "David Fraenkel",
+    house: "Slytherin",
+    bloodstatus: "pure-blood"
+}
 document.addEventListener("DOMContentLoaded", init);
 const Student = {
             firstname: "-student firstname-",
             middlename: "-student middlename-",
             lastname: "-student lastname-",
             house: "-student house-",
+            bloodstatus: "-student bloodstatus-",
+            inquisitorialsquad: "-student inquisitorialsquad-",
             setJSONData(jsonObject) {
             const parts = jsonObject.fullname.split(" ");
             this.firstname = parts[0] + " ";
             this.lastname = parts[1];
             this.house = jsonObject.house;
+            this.bloodstatus = jsonObject.bloodstatus;
+            this.inquisitorialsquad = jsonObject.inquisitorialsquad;
             }
         }
 const arrayOfStudents = [];
 const newArrayOfStudents = [];
+
 
 function init() {
     document.querySelector("#Houses").addEventListener("click", allHouses);
@@ -136,7 +219,7 @@ function init() {
     document.querySelector("#Ravenclaw").addEventListener("click", onlyRavenclaw);
     document.querySelector("#Slytherin").addEventListener("click", onlySlytherin);
 
-    document.querySelector('.data-container').addEventListener("click", clickExpelStudent);
+    document.querySelector('.data-container').addEventListener("click", clickList);
 
     loadJSON();
 }
@@ -144,6 +227,8 @@ function init() {
 async function loadJSON() {
     let myJson = await fetch("http://petlatkea.dk/2019/students1991.json");
         jsonData = await myJson.json();
+    let secondJson = await fetch("http://petlatkea.dk/2019/hogwarts/families.json");
+        bloodlist = await secondJson.json();
         prepareObjects(jsonData);
 } 
 
@@ -153,8 +238,41 @@ function prepareObjects(jsonData) {
         student.setJSONData(jsonObject);
         arrayOfStudents.push(student);
     });
+  createDavid();
+}
+
+function createDavid() {
+    let student = Object.create(Student);
+    student.setJSONData(david);
+    arrayOfStudents.push(student);
+    checkName();
+}
+
+function checkName() {
+    console.log("check names");
+    arrayOfStudents.forEach( student => {
+        bloodlist.half.forEach( name => {
+            if (name === student.lastname) {
+              student.bloodstatus = "half-blood";
+            }
+        }); 
+        bloodlist.pure.forEach( name => {
+            if (name === student.lastname && student.bloodstatus != "half-blood") {
+              student.bloodstatus = "pure-blood";
+              student.inquisitorialsquad = "Yes";
+            } 
+        });
+        if (student.bloodstatus === undefined) {
+            student.bloodstatus = "muggle";
+          }
+        if (student.house === "Slytherin") {
+            student.inquisitorialsquad = "Yes";
+        }
+    });
     filterList();
 }
+
+
 function allHouses() {
     houseFilter = arrayOfStudents;
     filterList(houseFilter);
@@ -261,6 +379,22 @@ function displayList(filtered) {
     clone.querySelector("[data-house]").textContent = student.house;
     clone.querySelector('button').dataset.id = student.firstname;
 
+    if (student.house === "Gryffindor") {
+        clone.querySelector(".name").classList.add("gryffindor");
+    }
+
+    if (student.house === "Slytherin") {
+        clone.querySelector(".name").classList.add("slytherin");
+    }
+
+    if (student.house === "Hufflepuff") {
+        clone.querySelector(".name").classList.add("hufflepuff");
+    }
+
+    if (student.house === "Ravenclaw") {
+        clone.querySelector(".name").classList.add("ravenclaw");
+    }
+
     clone.querySelector("#studentInfo").addEventListener("click", () => {
         showModal(student);
     });
@@ -268,14 +402,17 @@ function displayList(filtered) {
     document.querySelector(".data-container").appendChild(clone);
 
     });
+   
 }
 
-function clickExpelStudent(event) {
+
+function clickList(event) {
   
   if(event.target.innerHTML === "Expel Student") {
       clickRemoveStudent(event);
       }
 }
+
 
   function clickRemoveStudent(event) {
 
@@ -298,19 +435,24 @@ function clickExpelStudent(event) {
 
   function expelStudent(obj) {
       let pos = arrayOfStudents.indexOf(obj);
-      let deletedStudent = arrayOfStudents.splice(pos,1);
-      newArrayOfStudents.push(...deletedStudent);
- 
+
+        if(obj.lastname === "Fraenkel") {
+            console.log("Det kan du ikke");
+            swampModal.style.display = "block";
+            document.querySelector("iframe").src = "https://www.youtube.com/embed/VVggXZPCuYw?autoplay=1";
+          
+        } else {
+            let deletedStudent = arrayOfStudents.splice(pos,1);
+                newArrayOfStudents.push(...deletedStudent);
+        }
 
       for (let x = 0; x < newArrayOfStudents.length; x++) {
           document.querySelector(".StudentsExpelled").textContent = x + 1;
           document.querySelector(".StudentsExpelled").style.fontWeight = "bold";
       }
-      
   }
   filterList(houseFilter);
 }
-
 
 function showModal(student) {
     console.log("showModal");
@@ -321,8 +463,10 @@ function showModal(student) {
     modal.querySelector("[data-firstname]").textContent = student.firstname;
     modal.querySelector("[data-lastname]").textContent = student.lastname;
     modal.querySelector("#modalHouse").textContent = student.house;
+    modal.querySelector(".bloodStatus").textContent = student.bloodstatus;
     modal.querySelector("#modalImg").src = "images/" + picture + ".png";
-
+    modal.querySelector("#inquisitorialButton").dataset.id = student.firstname;
+    
 
     if (student.house === "Gryffindor") {
         modal.querySelector("#modalContent").classList.add("gryffindor");
@@ -345,11 +489,15 @@ function showModal(student) {
     });
 }
 
-//git
+
 
 function closeModal() {
     modal.classList.remove("vis");
+    setTimeout(function() {
+          modal.querySelector("#modalContent").classList.remove("hufflepuff", "gryffindor", "ravenclaw", "slytherin");   
+        }, 500);
 }
+
 </script>
 </body>
 </html>
